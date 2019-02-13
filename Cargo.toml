@@ -1,0 +1,13 @@
+[package]
+name = "futures-native-timers"
+version = "0.1.0"
+authors = ["tinaun <tinagma@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+futures-preview = "0.3.0-alpha.12"
+
+
+[dependencies.winapi]
+version = "0.3"
+features = ["threadpoolapiset"]
