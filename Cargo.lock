@@ -66,6 +66,7 @@ name = "futures-native-timers"
 version = "0.1.0"
 dependencies = [
  "futures-preview 0.3.0-alpha.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.48 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

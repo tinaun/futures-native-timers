@@ -21,8 +21,14 @@ macro_rules! dbg_println {
     };
 }
 
+#[cfg(windows)]
 #[path = "sys/windows.rs"]
 mod imp;
+
+#[cfg(target_os = "linux")]
+#[path = "sys/linux.rs"]
+mod imp;
+
 use imp::NativeTimer;
 
 #[derive(Debug)]
@@ -222,7 +228,7 @@ mod tests {
         use futures::select;
 
         let mut timeout = Delay::new(Duration::from_secs(1));
-        let mut stream = Interval::new(Duration::from_millis(95));
+        let mut stream = Interval::new(Duration::from_millis(99));
 
         let work = async {
             let mut total = 0;
