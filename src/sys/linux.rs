@@ -100,7 +100,7 @@ impl NativeTimer {
     }
 
     pub fn init_delay(&mut self, delay: Duration) {
-        let mut ticks = timespec {
+        let ticks = timespec {
             tv_sec: delay.as_secs() as i64,
             tv_nsec: delay.subsec_nanos() as i64,
         };
@@ -109,7 +109,7 @@ impl NativeTimer {
     }
 
     pub fn init_interval(&mut self, interval: Duration) {
-        let mut ticks = timespec {
+        let ticks = timespec {
             tv_sec: interval.as_secs() as i64,
             tv_nsec: interval.subsec_nanos() as i64,
         };
