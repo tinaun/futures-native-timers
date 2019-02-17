@@ -88,3 +88,6 @@ impl Drop for NativeTimer {
         dbg_println!("timer closed.");
     }
 }
+
+unsafe impl Send for NativeTimer {}
+unsafe impl Sync for NativeTimer {}

@@ -246,5 +246,51 @@ mod tests {
         let res = block_on(work);
         assert_eq!(res, 10);
     }
+
+    #[test]
+    fn send_timers() {
+        const NUM_TIMERS: usize = 5;
+
+        use futures::executor::ThreadPool;
+        use futures::task::SpawnExt;
+        use futures::channel::mpsc;
+        let mut handle = ThreadPool::new().unwrap();
+
+        async fn delay(value: usize, millis: u64) -> usize {
+            let _ = await!(Delay::new(Duration::from_millis(millis)));
+
+            value
+        }
+
+        let mut pool = handle.clone();
+        let work = async move {
+            
+            let mut res: Vec<usize> = vec![];
+            let (send, mut recv) = mpsc::channel(NUM_TIMERS);
+            
+            for i in 1..=NUM_TIMERS {
+                let mut send = send.clone();
+                let task = async move {
+                    let v = await!(delay(i, (i*10) as u64));
+                    dbg_println!("sending? {:?}", v);
+                    let res = await!(send.send(v));
+                    dbg_println!("result? {:?}", res);
+                };
+                pool.spawn(task).unwrap();
+            }
+            
+            drop(send);
+            while let Some(v) = await!(recv.next()) {
+                dbg_println!("recieved {}", v);
+                res.push(v);
+            }
+            
+
+            res
+        };
+
+        let res = handle.run(work);
+        assert_eq!(res, vec![1,2,3,4,5]);
+    }
 }
 
