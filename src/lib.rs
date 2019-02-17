@@ -1,15 +1,8 @@
 #![feature(futures_api, async_await, await_macro)]
 
-
-use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex};
 
-use std::pin::Pin;
-
-use futures::prelude::*;
-use futures::future::FusedFuture;
-use futures::stream::FusedStream;
-use futures::task::{Poll, LocalWaker, Waker};
+use futures::task::{LocalWaker, Waker};
 
 #[macro_export]
 macro_rules! dbg_println {
@@ -21,6 +14,9 @@ macro_rules! dbg_println {
     };
 }
 
+mod interval;
+mod delay;
+
 #[cfg(windows)]
 #[path = "sys/windows.rs"]
 mod imp;
@@ -30,6 +26,9 @@ mod imp;
 mod imp;
 
 use imp::NativeTimer;
+
+pub use delay::Delay;
+pub use interval::Interval;
 
 #[derive(Debug)]
 pub (crate) struct TimerState {
@@ -86,99 +85,6 @@ impl Timer {
         self.state.lock().unwrap().done
     }
 }
-
-
-#[derive(Debug)]
-#[must_use = "futures do nothing unless polled"]
-pub struct Delay {
-    inner: Timer,
-    delay: Duration,
-    done: bool,
-}
-
-impl Delay {
-    pub fn new(delay: Duration) -> Self {
-        let inner = Timer::new();
-
-        Delay {
-            inner,
-            delay,
-            done: false,
-        }
-    }
-}
-
-impl Future for Delay {
-    type Output = ();
-
-    fn poll(mut self: Pin<&mut Self>, lw: &LocalWaker) -> Poll<Self::Output> {
-        if !self.inner.is_active() {
-            let delay = self.delay;
-            self.inner.handle.init_delay(delay);
-        }
-
-        self.inner.register_waker(lw);
-        if self.inner.is_done() {
-            self.done = true;
-            Poll::Ready(())
-        } else {
-            Poll::Pending
-        }
-    }
-}
-
-impl FusedFuture for Delay {
-    fn is_terminated(&self) -> bool {
-        self.done
-    }
-}
-
-impl Unpin for Delay {}
-
-
-pub struct Interval {
-    inner: Timer,
-    interval: Duration,
-}
-
-impl Interval {
-    pub fn new(interval: Duration) -> Self {
-        let inner = Timer::new();
-
-        Interval {
-            inner,
-            interval,
-        }
-    }
-}
-
-impl Stream for Interval {
-    type Item = Instant;
-
-    fn poll_next(mut self: Pin<&mut Self>, lw: &LocalWaker) -> Poll<Option<Self::Item>> {
-        if !self.inner.is_active() {
-            let interval = self.interval;
-            self.inner.handle.init_interval(interval);
-        }
-
-        self.inner.register_waker(lw);
-        let mut state = self.inner.state.lock().unwrap();
-        if state.done {
-            state.done = false;
-            Poll::Ready(Some(Instant::now()))
-        } else {
-            Poll::Pending
-        }
-    }
-}
-
-impl FusedStream for Interval {
-    fn is_terminated(&self) -> bool {
-        false
-    }
-}
-
-impl Unpin for Interval {}
 
 
 #[cfg(test)]
@@ -278,7 +184,7 @@ mod tests {
                 };
                 pool.spawn(task).unwrap();
             }
-            
+
             drop(send);
             while let Some(v) = await!(recv.next()) {
                 dbg_println!("recieved {}", v);
