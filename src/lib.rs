@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use futures::task::{LocalWaker, Waker};
+use futures::task::Waker;
 
 #[macro_export]
 macro_rules! dbg_println {
@@ -44,8 +44,8 @@ impl TimerState {
         }
     }
 
-    fn register_waker(&mut self, lw: &LocalWaker) {
-        self.wake = Some(lw.as_waker().clone());
+    fn register_waker(&mut self, lw: &Waker) {
+        self.wake = Some(lw.clone());
     }
 }
 
@@ -72,7 +72,7 @@ impl Timer {
         }
     }
 
-    fn register_waker(&mut self, lw: &LocalWaker) {
+    fn register_waker(&mut self, lw: &Waker) {
         let mut state = self.state.lock().unwrap();
         state.register_waker(lw);
     }

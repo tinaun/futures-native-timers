@@ -3,7 +3,7 @@ use std::pin::Pin;
 
 use futures::prelude::*;
 use futures::future::FusedFuture;
-use futures::task::{Poll, LocalWaker};
+use futures::task::{Poll, Waker};
 
 use super::Timer;
 
@@ -30,7 +30,7 @@ impl Delay {
 impl Future for Delay {
     type Output = ();
 
-    fn poll(mut self: Pin<&mut Self>, lw: &LocalWaker) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, lw: &Waker) -> Poll<Self::Output> {
         if !self.inner.is_active() {
             let delay = self.delay;
             self.inner.handle.init_delay(delay);

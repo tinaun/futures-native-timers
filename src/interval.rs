@@ -3,7 +3,7 @@ use std::pin::Pin;
 
 use futures::prelude::*;
 use futures::stream::FusedStream;
-use futures::task::{Poll, LocalWaker};
+use futures::task::{Poll, Waker};
 
 use super::Timer;
 
@@ -27,7 +27,7 @@ impl Interval {
 impl Stream for Interval {
     type Item = Instant;
 
-    fn poll_next(mut self: Pin<&mut Self>, lw: &LocalWaker) -> Poll<Option<Self::Item>> {
+    fn poll_next(mut self: Pin<&mut Self>, lw: &Waker) -> Poll<Option<Self::Item>> {
         if !self.inner.is_active() {
             let interval = self.interval;
             self.inner.handle.init_interval(interval);

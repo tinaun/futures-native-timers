@@ -5,7 +5,7 @@ authors = ["tinaun <tinagma@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-futures-preview = "0.3.0-alpha.12"
+futures-preview = "0.3.0-alpha.13"
 libc = "0.2"
 
 
