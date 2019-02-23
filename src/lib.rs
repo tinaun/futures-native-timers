@@ -25,6 +25,10 @@ mod imp;
 #[path = "sys/linux.rs"]
 mod imp;
 
+#[cfg(target_os = "macos")]
+#[path = "sys/macos.rs"]
+mod imp;
+
 use imp::NativeTimer;
 
 pub use delay::Delay;
@@ -144,7 +148,7 @@ mod tests {
                     _ = timeout => break,
                 }
             }
-            
+
 
             total
         };
@@ -170,10 +174,10 @@ mod tests {
 
         let mut pool = handle.clone();
         let work = async move {
-            
+
             let mut res: Vec<usize> = vec![];
             let (send, mut recv) = mpsc::channel(NUM_TIMERS);
-            
+
             for i in 1..=NUM_TIMERS {
                 let mut send = send.clone();
                 let task = async move {
@@ -190,7 +194,7 @@ mod tests {
                 dbg_println!("recieved {}", v);
                 res.push(v);
             }
-            
+
 
             res
         };
@@ -199,4 +203,3 @@ mod tests {
         assert_eq!(res, vec![1,2,3,4,5]);
     }
 }
-
