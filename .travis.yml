@@ -1,12 +1,28 @@
 language: rust
 rust:
   - nightly
-sudo: false
+sudo: required
 cache: cargo
 
 script:
-- cargo build
+  - cargo build
+
+os:
+  - macos
+  - linux
+
+matrix:
+  include:
+    - name: "i686-unknown-linux-gnu"
+      script:
+        - rustup target install i686-unknown-linux-gnu
+        - cargo build --target i686-unknown-linux-gnu
 
 notifications:
   email:
     on_success: never
+
+addons:
+  apt:
+    packages:
+      - gcc-multilib
