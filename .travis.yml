@@ -1,0 +1,12 @@
+language: rust
+rust:
+  - nightly
+sudo: false
+cache: cargo
+
+script:
+- cargo build
+
+notifications:
+  email:
+    on_success: never
