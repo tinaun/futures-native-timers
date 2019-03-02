@@ -16,6 +16,8 @@ use libc::{
     siginfo_t,
     sigevent,
     timespec,
+    time_t,
+    suseconds_t,
 };
 
 // for some reason these aren't in the libc crate yet.
@@ -101,8 +103,8 @@ impl NativeTimer {
 
     pub fn init_delay(&mut self, delay: Duration) {
         let ticks = timespec {
-            tv_sec: delay.as_secs() as i64,
-            tv_nsec: delay.subsec_nanos() as i64,
+            tv_sec: delay.as_secs() as time_t,
+            tv_nsec: delay.subsec_nanos() as suseconds_t,
         };
 
         self.init(ticks, None);
@@ -110,8 +112,8 @@ impl NativeTimer {
 
     pub fn init_interval(&mut self, interval: Duration) {
         let ticks = timespec {
-            tv_sec: interval.as_secs() as i64,
-            tv_nsec: interval.subsec_nanos() as i64,
+            tv_sec: interval.as_secs() as time_t,
+            tv_nsec: interval.subsec_nanos() as suseconds_t,
         };
         
         self.init(ticks, Some(ticks));
