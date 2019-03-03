@@ -1,8 +1,8 @@
-use std::time::Duration;
 use std::pin::Pin;
+use std::time::Duration;
 
-use futures::prelude::*;
 use futures::future::FusedFuture;
+use futures::prelude::*;
 use futures::task::{Poll, Waker};
 
 use super::Timer;

@@ -1,28 +1,31 @@
+use crate::Delay;
 use futures::{
     prelude::*,
-    task::{Poll, Waker}
+    task::{Poll, Waker},
 };
-use crate::Delay;
 use pin_utils::unsafe_pinned;
 use std::{error, fmt, pin::Pin, time::Duration};
 
-pub trait FutureTimeout {
+pub trait FutureExt {
     fn timeout(self, timeout: Duration) -> Timeout<Self>
     where
-        Self: Sized
+        Self: Sized,
     {
         let delay = Delay::new(timeout);
-        Timeout { future: self, delay }
+        Timeout {
+            future: self,
+            delay,
+        }
     }
 }
 
-impl<F, T> FutureTimeout for F where F: Future<Output = T> {}
+impl<F, T> FutureExt for F where F: Future<Output = T> {}
 
 #[derive(Debug)]
 #[must_use = "futures do nothing unless polled"]
 pub struct Timeout<F> {
     future: F,
-    delay: Delay
+    delay: Delay,
 }
 
 impl<F> Timeout<F> {
@@ -35,7 +38,7 @@ impl<F: Unpin> Unpin for Timeout<F> {}
 
 impl<F, T> Future for Timeout<F>
 where
-    F: Future<Output = T>
+    F: Future<Output = T>,
 {
     type Output = Result<T, TimeoutError>;
 

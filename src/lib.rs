@@ -1,10 +1,10 @@
 #![feature(futures_api, async_await, await_macro)]
 
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::SeqCst;
+use std::sync::Arc;
 
-use futures::task::{Waker, AtomicWaker};
+use futures::task::{AtomicWaker, Waker};
 
 #[macro_export]
 macro_rules! dbg_println {
@@ -16,8 +16,8 @@ macro_rules! dbg_println {
     };
 }
 
-mod interval;
 mod delay;
+mod interval;
 mod timeout;
 
 #[cfg(windows)]
@@ -36,10 +36,10 @@ use imp::NativeTimer;
 
 pub use delay::Delay;
 pub use interval::Interval;
-pub use timeout::{FutureTimeout, Timeout, TimeoutError};
+pub use timeout::{FutureExt, Timeout, TimeoutError};
 
 #[derive(Debug)]
-pub (crate) struct TimerState {
+pub(crate) struct TimerState {
     wake: AtomicWaker,
     done: AtomicBool,
 }
@@ -80,11 +80,7 @@ impl Timer {
             let handle = NativeTimer::new(ptr as *mut _);
             let state = Arc::from_raw(ptr);
 
-
-            Timer {
-                handle,
-                state,
-            }
+            Timer { handle, state }
         }
     }
 
@@ -101,13 +97,12 @@ impl Timer {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use futures::prelude::*;
-    use futures::executor::block_on;
-    use std::time::{Duration, Instant};
     use super::*;
+    use futures::executor::block_on;
+    use futures::prelude::*;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn join_timers() {
@@ -160,7 +155,6 @@ mod tests {
                 }
             }
 
-
             total
         };
 
@@ -172,9 +166,9 @@ mod tests {
     fn send_timers() {
         const NUM_TIMERS: usize = 5;
 
+        use futures::channel::mpsc;
         use futures::executor::ThreadPool;
         use futures::task::SpawnExt;
-        use futures::channel::mpsc;
         let mut handle = ThreadPool::new().unwrap();
 
         async fn delay(value: usize, millis: u64) -> usize {
@@ -185,14 +179,13 @@ mod tests {
 
         let mut pool = handle.clone();
         let work = async move {
-
             let mut res: Vec<usize> = vec![];
             let (send, mut recv) = mpsc::channel(NUM_TIMERS);
 
             for i in 1..=NUM_TIMERS {
                 let mut send = send.clone();
                 let task = async move {
-                    let v = await!(delay(i, (i*10) as u64));
+                    let v = await!(delay(i, (i * 10) as u64));
                     dbg_println!("sending? {:?}", v);
                     let res = await!(send.send(v));
                     dbg_println!("result? {:?}", res);
@@ -206,24 +199,22 @@ mod tests {
                 res.push(v);
             }
 
-
             res
         };
 
         let res = handle.run(work);
-        assert_eq!(res, vec![1,2,3,4,5]);
+        assert_eq!(res, vec![1, 2, 3, 4, 5]);
     }
 
     #[test]
     fn send_then_drop() {
-        use std::thread;
         use futures::select;
+        use std::thread;
 
-        let mut short = thread::spawn(move || {
-            Delay::new(Duration::from_millis(400))
-        }).join().unwrap();
+        let mut short = thread::spawn(move || Delay::new(Duration::from_millis(400)))
+            .join()
+            .unwrap();
         let mut long = Delay::new(Duration::from_millis(800));
-
 
         let work = async {
             select! {

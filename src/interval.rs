@@ -1,5 +1,5 @@
-use std::time::{Instant, Duration};
 use std::pin::Pin;
+use std::time::{Duration, Instant};
 
 use futures::prelude::*;
 use futures::stream::FusedStream;
@@ -17,10 +17,7 @@ impl Interval {
     pub fn new(interval: Duration) -> Self {
         let inner = Timer::new();
 
-        Interval {
-            inner,
-            interval,
-        }
+        Interval { inner, interval }
     }
 }
 
