@@ -70,7 +70,6 @@ unsafe extern "C" fn handler(_sig: c_int, si: *mut siginfo_t, _uc: *mut c_void) 
 pub struct NativeTimer {
     inner: timer_t,
     active: bool,
-    _no_send: *const (),
 }
 
 impl NativeTimer {
@@ -94,7 +93,6 @@ impl NativeTimer {
         NativeTimer {
             inner: timer,
             active: false,
-            _no_send: ptr::null(),   
         }
     }
 
