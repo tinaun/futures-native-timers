@@ -211,4 +211,26 @@ mod tests {
         let res = handle.run(work);
         assert_eq!(res, vec![1,2,3,4,5]);
     }
+    
+    #[test]
+    fn send_then_drop() {
+        use std::thread;
+        use futures::select;
+
+        let mut short = thread::spawn(move || {
+            Delay::new(Duration::from_millis(400))
+        }).join().unwrap();
+        let mut long = Delay::new(Duration::from_millis(800));
+
+
+        let work = async {
+            select! {
+                _ = short => "short finished first",
+                _ = long => "long finished first",
+            }
+        };
+
+        let res = block_on(work);
+        assert_eq!(res, "short finished first");
+    }
 }

@@ -81,6 +81,16 @@ impl NativeTimer {
         let mut sev: sigevent = mem::zeroed();
         sev.sigev_value = libc::sigval { sival_ptr };
         sev.sigev_signo = MYSIG;
+
+        // yes, this means that if you create a timer on a thread that later is dropped,
+        // timer events won't fire. changing this to SIGEV_SIGNAL leads to complete
+        // non-deterministic behavior when running tests, since any thread could be 
+        // interupted for any signal.
+        //
+        // this is unfortunate, but will do for now - generally futures executors don't 
+        // tend to kill and respawn threads often.
+        //
+        // a solution to this might have to involve a dedicated thread for signal handling.
         sev.sigev_notify = libc::SIGEV_THREAD_ID;
         let tid = libc::syscall(libc::SYS_gettid);
         sev.sigev_notify_thread_id = tid as i32;
