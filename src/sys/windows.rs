@@ -1,24 +1,20 @@
+use super::{dbg_println, TimerState};
 use std::ptr;
 use std::time::Duration;
-use super::{TimerState, dbg_println};
 
-use winapi::shared::minwindef::{TRUE, FILETIME};
-use winapi::um::winnt::{
-    PTP_CALLBACK_INSTANCE,
-    PVOID,
-    PTP_TIMER,
-};
+use winapi::shared::minwindef::{FILETIME, TRUE};
+use winapi::um::winnt::{PTP_CALLBACK_INSTANCE, PTP_TIMER, PVOID};
 
 use winapi::um::threadpoolapiset::{
-    CreateThreadpoolTimer,
+    CloseThreadpoolTimer,
+    CreateThreadpoolTimer, 
     SetThreadpoolTimerEx,
     WaitForThreadpoolTimerCallbacks,
-    CloseThreadpoolTimer,
 };
 
-unsafe extern "system" fn timer_callback(_instance: PTP_CALLBACK_INSTANCE, context: PVOID, _timer: PTP_TIMER) {
+unsafe extern "system" fn timer_callback(_: PTP_CALLBACK_INSTANCE, context: PVOID, _: PTP_TIMER) {
     let state = context as *mut TimerState;
-    
+
     (*state).set_done(true);
     (*state).wake.wake();
 }
@@ -30,8 +26,8 @@ pub struct NativeTimer {
 }
 
 impl NativeTimer {
-    pub(crate) unsafe fn new( state: *mut TimerState ) -> Self {
-        let timer = CreateThreadpoolTimer(Some(timer_callback), state as *mut _ , ptr::null_mut());
+    pub(crate) unsafe fn new(state: *mut TimerState) -> Self {
+        let timer = CreateThreadpoolTimer(Some(timer_callback), state as *mut _, ptr::null_mut());
 
         NativeTimer {
             inner: timer,
@@ -40,7 +36,7 @@ impl NativeTimer {
     }
 
     pub fn is_active(&self) -> bool {
-        self.active    
+        self.active
     }
 
     pub fn init_delay(&mut self, delay: Duration) {
@@ -56,9 +52,9 @@ impl NativeTimer {
         ticks += (interval.as_secs() * 10_000_000) as i64;
         let millis = (ticks / 10_000) as u32;
         let ticks = -ticks;
-        
+
         self.init(ticks, millis);
-    } 
+    }
 
     fn init(&mut self, start: i64, repeat: u32) {
         self.active = true;
@@ -66,12 +62,12 @@ impl NativeTimer {
 
         unsafe {
             // i need to find a better way to do this. :/
-            // probably byteorder? windows apis are super weird - where else would a i64 
+            // probably byteorder? windows apis are super weird - where else would a i64
             // have to be represented as two u32s
             let mut time: FILETIME = std::mem::transmute(start);
             SetThreadpoolTimerEx(self.inner, &mut time, repeat, 0);
         }
-    } 
+    }
 }
 
 impl Drop for NativeTimer {
