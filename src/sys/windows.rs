@@ -6,8 +6,6 @@ use winapi::shared::minwindef::{FILETIME, TRUE};
 use winapi::um::winnt::{PTP_CALLBACK_INSTANCE, PTP_TIMER, PVOID};
 
 use winapi::um::threadpoolapiset::{
-    CloseThreadpoolTimer, CreateThreadpoolTimer, SetThreadpoolTimerEx,
-    WaitForThreadpoolTimerCallbacks,
     CloseThreadpoolTimer,
     CreateThreadpoolTimer, 
     SetThreadpoolTimerEx,
