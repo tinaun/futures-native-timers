@@ -1,8 +1,10 @@
 #![feature(futures_api, async_await, await_macro)]
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::SeqCst;
 
-use futures::task::Waker;
+use futures::task::{Waker, AtomicWaker};
 
 #[macro_export]
 macro_rules! dbg_println {
@@ -36,32 +38,40 @@ pub use interval::Interval;
 
 #[derive(Debug)]
 pub (crate) struct TimerState {
-    wake: Option<Waker>,
-    done: bool,
+    wake: AtomicWaker,
+    done: AtomicBool,
 }
 
 impl TimerState {
     fn new() -> Self {
         TimerState {
-            wake: None,
-            done: false,
+            wake: AtomicWaker::new(),
+            done: false.into(),
         }
     }
 
-    fn register_waker(&mut self, lw: &Waker) {
-        self.wake = Some(lw.clone());
+    fn register_waker(&self, lw: &Waker) {
+        self.wake.register(lw);
+    }
+
+    fn set_done(&self, done: bool) {
+        self.done.store(done, SeqCst);
+    }
+
+    fn done(&self) -> bool {
+        self.done.load(SeqCst)
     }
 }
 
 #[derive(Debug)]
 struct Timer {
     handle: NativeTimer,
-    state: Arc<Mutex<TimerState>>,
+    state: Arc<TimerState>,
 }
 
 impl Timer {
     pub fn new() -> Self {
-        let state = Arc::new(Mutex::new(TimerState::new()));
+        let state = Arc::new(TimerState::new());
 
         unsafe {
             let ptr = Arc::into_raw(state);
@@ -76,9 +86,8 @@ impl Timer {
         }
     }
 
-    fn register_waker(&mut self, lw: &Waker) {
-        let mut state = self.state.lock().unwrap();
-        state.register_waker(lw);
+    fn register_waker(&self, lw: &Waker) {
+        self.state.register_waker(lw);
     }
 
     fn is_active(&self) -> bool {
@@ -86,7 +95,7 @@ impl Timer {
     }
 
     fn is_done(&self) -> bool {
-        self.state.lock().unwrap().done
+        self.state.done()
     }
 }
 

@@ -34,9 +34,8 @@ impl Stream for Interval {
         }
 
         self.inner.register_waker(lw);
-        let mut state = self.inner.state.lock().unwrap();
-        if state.done {
-            state.done = false;
+        if self.inner.is_done() {
+            self.inner.state.set_done(false);
             Poll::Ready(Some(Instant::now()))
         } else {
             Poll::Pending

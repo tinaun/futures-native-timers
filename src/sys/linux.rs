@@ -53,17 +53,14 @@ unsafe extern "C" fn handler(_sig: c_int, si: *mut siginfo_t, _uc: *mut c_void) 
     // so we have to manually track the offset to get the correct field.
     // 
     let raw_bytes = (*si)._pad;
-    let val: libc::sigval = ptr::read(&raw_bytes[3].as_ptr() as *const _)
+    let val: libc::sigval = ptr::read(raw_bytes[3..].as_ptr() as *const _);
     
     
-    let context = val.sival_ptr as *mut Mutex<TimerState>;
-    dbg_println!("handled - {:p}", context);
-
-    let mut state = (*context).lock().unwrap();
+    let state = val.sival_ptr as *mut TimerState;
+    dbg_println!("handled - {:p}", state);
     
-    state.done = true;
-    state.wake.as_ref().map(|w| w.wake());
-    
+    (*state).set_done(true);
+    (*state).wake.wake();
 }
 
 

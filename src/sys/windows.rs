@@ -18,12 +18,10 @@ use winapi::um::threadpoolapiset::{
 };
 
 unsafe extern "system" fn timer_callback(_instance: PTP_CALLBACK_INSTANCE, context: PVOID, _timer: PTP_TIMER) {
-
-    let context = context as *mut Mutex<TimerState>;
-    let mut state = (*context).lock().unwrap();
-    state.done = true;
-    state.wake.as_ref().map(|w| w.wake());
-
+    let state = context as *mut TimerState;
+    
+    (*state).set_done(true);
+    (*state).wake.wake();
 }
 
 #[derive(Debug)]

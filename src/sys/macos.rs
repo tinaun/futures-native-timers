@@ -118,9 +118,8 @@ impl Drop for NativeTimer {
 }
 
 unsafe extern "C" fn handler(context: *mut c_void) {
-    let context = context as *mut Mutex<TimerState>;
-    let mut state = (*context).lock().unwrap();
+    let state = context as *mut TimerState;
 
-    state.done = true;
-    state.wake.as_ref().map(|w| w.wake());
+    (*state).set_done(true)
+    (*state).wake.wake();
 }
