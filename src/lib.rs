@@ -18,6 +18,7 @@ macro_rules! dbg_println {
 
 mod interval;
 mod delay;
+mod timeout;
 
 #[cfg(windows)]
 #[path = "sys/windows.rs"]
@@ -35,6 +36,7 @@ use imp::NativeTimer;
 
 pub use delay::Delay;
 pub use interval::Interval;
+pub use timeout::{FutureTimeout, Timeout, TimeoutError};
 
 #[derive(Debug)]
 pub (crate) struct TimerState {
@@ -211,7 +213,7 @@ mod tests {
         let res = handle.run(work);
         assert_eq!(res, vec![1,2,3,4,5]);
     }
-    
+
     #[test]
     fn send_then_drop() {
         use std::thread;
@@ -232,5 +234,14 @@ mod tests {
 
         let res = block_on(work);
         assert_eq!(res, "short finished first");
+    }
+
+    #[test]
+    fn timeout() {
+        use futures::future::empty;
+
+        // The empty future will always return Poll::Pending, so this will always timeout first
+        let result: Result<(), TimeoutError> = block_on(empty().timeout(Duration::new(0, 0)));
+        assert!(result.is_err());
     }
 }
