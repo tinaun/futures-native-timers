@@ -12,7 +12,7 @@ use winapi::um::threadpoolapiset::{
     WaitForThreadpoolTimerCallbacks,
 };
 
-unsafe extern "system" fn timer_callback(_: PTP_CALLBACK_INSTANCE, context: PVOID, _: PTP_TIMER,) {
+unsafe extern "system" fn timer_callback(_: PTP_CALLBACK_INSTANCE, context: PVOID, _: PTP_TIMER) {
     let state = context as *mut TimerState;
 
     (*state).set_done(true);
