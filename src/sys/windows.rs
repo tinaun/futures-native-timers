@@ -1,6 +1,5 @@
 use std::ptr;
 use std::time::Duration;
-use std::sync::Mutex;
 use super::{TimerState, dbg_println};
 
 use winapi::shared::minwindef::{TRUE, FILETIME};
@@ -31,7 +30,7 @@ pub struct NativeTimer {
 }
 
 impl NativeTimer {
-    pub(crate) unsafe fn new( state: *mut Mutex<TimerState> ) -> Self {
+    pub(crate) unsafe fn new( state: *mut TimerState ) -> Self {
         let timer = CreateThreadpoolTimer(Some(timer_callback), state as *mut _ , ptr::null_mut());
 
         NativeTimer {

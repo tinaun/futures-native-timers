@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types)]
 
 use super::TimerState;
-use std::sync::Mutex;
 use std::time::Duration;
 
 use libc::{c_long, c_ulong, c_void, int64_t, uint64_t, uintptr_t};
@@ -50,7 +49,7 @@ pub struct NativeTimer {
 unsafe impl Send for NativeTimer {}
 
 impl NativeTimer {
-    pub(crate) unsafe fn new(state: *mut Mutex<TimerState>) -> Self {
+    pub(crate) unsafe fn new(state: *mut TimerState) -> Self {
         let timer = dispatch_source_create(
             &_dispatch_source_type_timer as *const _ as dispatch_source_type_t,
             0, // handle (not used for timers)

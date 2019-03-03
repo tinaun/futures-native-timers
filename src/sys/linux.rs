@@ -2,7 +2,7 @@
 
 use std::ptr;
 use std::mem;
-use std::sync::{Once, Mutex};
+use std::sync::Once;
 use std::time::Duration;
 use super::TimerState;
 
@@ -73,7 +73,7 @@ pub struct NativeTimer {
 }
 
 impl NativeTimer {
-    pub(crate) unsafe fn new( state: *mut Mutex<TimerState> ) -> Self {
+    pub(crate) unsafe fn new( state: *mut TimerState ) -> Self {
         HANDLER.call_once(|| init_handler());
         dbg_println!("{:p}", state);
 
