@@ -48,8 +48,12 @@ unsafe fn init_handler() {
 
 unsafe extern "C" fn handler(_sig: c_int, si: *mut siginfo_t, _uc: *mut c_void) {
     // evil things are afoot - tread wisely.
+    //
+    // the `libc` crate exposes the union part of siginfo_t as a array of i32s,
+    // so we have to manually track the offset to get the correct field.
+    // 
     let raw_bytes = (*si)._pad;
-    let val: libc::sigval = mem::transmute([raw_bytes[3], raw_bytes[4]]);
+    let val: libc::sigval = ptr::read(&raw_bytes[3].as_ptr() as *const _)
     
     
     let context = val.sival_ptr as *mut Mutex<TimerState>;
