@@ -3,34 +3,31 @@
 use futures_native_timers::{Delay, Interval};
 use std::time::Duration;
 
-use futures::select;
 use futures::executor::block_on;
 use futures::prelude::*;
+use futures::select;
 
 fn main() {
-            
+    let mut timeout = Delay::new(Duration::from_secs(1));
+    let mut stream = Interval::new(Duration::from_millis(99));
 
-        let mut timeout = Delay::new(Duration::from_secs(1));
-        let mut stream = Interval::new(Duration::from_millis(99));
+    println!("{:?}", timeout);
 
-        println!("{:?}", timeout);
-
-        let work = async {
-            let mut total = 0;
-            loop {
-                select! {
-                    _ = stream.next() => {
-                        total += 1;
-                        println!("ping.");
-                    },
-                    _ = timeout => break,
-                }
+    let work = async {
+        let mut total = 0;
+        loop {
+            select! {
+                _ = stream.next() => {
+                    total += 1;
+                    println!("ping.");
+                },
+                _ = timeout => break,
             }
-            
+        }
 
-            total
-        };
+        total
+    };
 
-        let res = block_on(work);
-        dbg!(res);
+    let res = block_on(work);
+    dbg!(res);
 }
