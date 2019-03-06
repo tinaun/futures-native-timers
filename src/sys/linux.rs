@@ -83,9 +83,9 @@ impl NativeTimer {
         // tend to kill and respawn threads often.
         //
         // a solution to this might have to involve a dedicated thread for signal handling.
-        sev.sigev_notify = libc::SIGEV_THREAD_ID;
-        let tid = libc::syscall(libc::SYS_gettid);
-        sev.sigev_notify_thread_id = tid as i32;
+        sev.sigev_notify = libc::SIGEV_SIGNAL;
+        // let tid = libc::syscall(libc::SYS_gettid);
+        // sev.sigev_notify_thread_id = tid as i32;
 
         let mut timer = 0;
         let res = timer_create(CLOCK_MONOTONIC, &mut sev, &mut timer);
