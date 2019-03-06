@@ -5,7 +5,7 @@ sudo: required
 cache: cargo
 
 script:
-  - cargo build
+  - cargo test
 
 os:
   - macos
